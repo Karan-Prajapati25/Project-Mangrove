@@ -7,8 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Leaf, Shield, Users, Award, UserCheck } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Leaf, Shield, Users, Award } from 'lucide-react';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +15,6 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [country, setCountry] = useState('');
-  const [loginType, setLoginType] = useState<'user' | 'admin'>('user');
   
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
@@ -41,41 +39,8 @@ const Auth = () => {
         variant: "destructive",
       });
     } else {
-      if (loginType === 'admin') {
-        // Get current session to get user ID
-        const { data: sessionData } = await supabase.auth.getSession();
-        const currentUserId = sessionData?.session?.user?.id;
-
-        if (currentUserId) {
-          // Check if user has admin privileges
-          const { data: adminData, error: adminError } = await supabase
-            .from('admin_roles')
-            .select('verification_status')
-            .eq('user_id', currentUserId)
-            .single();
-
-          if (adminError || adminData?.verification_status !== 'Approved') {
-            toast({
-              title: "Access denied",
-              description: "You don't have administrator privileges or your admin application hasn't been approved yet.",
-              variant: "destructive",
-            });
-            setIsLoading(false);
-            return;
-          }
-          navigate('/admin-dashboard');
-        } else {
-          toast({
-            title: "Error",
-            description: "Unable to verify admin status. Please try again.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-      } else {
-        navigate('/dashboard');
-      }
+      // Always navigate to user dashboard - admin users should use /admin route
+      navigate('/dashboard');
       
       toast({
         title: "Welcome back!",
@@ -140,31 +105,6 @@ const Auth = () => {
                   
                   <TabsContent value="signin">
                     <div className="space-y-4">
-                      {/* Login Type Selection */}
-                      <div className="space-y-3">
-                        <Label>Sign in as:</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            type="button"
-                            variant={loginType === 'user' ? 'default' : 'outline'}
-                            className="flex items-center gap-2"
-                            onClick={() => setLoginType('user')}
-                          >
-                            <Users className="h-4 w-4" />
-                            User
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={loginType === 'admin' ? 'default' : 'outline'}
-                            className="flex items-center gap-2"
-                            onClick={() => setLoginType('admin')}
-                          >
-                            <UserCheck className="h-4 w-4" />
-                            Admin
-                          </Button>
-                        </div>
-                      </div>
-                      
                       <form onSubmit={handleSignIn} className="space-y-4">
                         <div className="space-y-2">
                           <Label htmlFor="email">Email</Label>
@@ -189,9 +129,19 @@ const Auth = () => {
                           />
                         </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading ? "Signing in..." : `Sign In as ${loginType === 'admin' ? 'Administrator' : 'User'}`}
+                          {isLoading ? "Signing in..." : "Sign In"}
                         </Button>
                       </form>
+                      
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600">
+                          Admin users should use the{' '}
+                          <a href="/admin" className="text-blue-600 hover:underline">
+                            Admin Login
+                          </a>{' '}
+                          instead.
+                        </p>
+                      </div>
                     </div>
                   </TabsContent>
                   

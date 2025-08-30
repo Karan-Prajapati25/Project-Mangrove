@@ -1,4 +1,15 @@
--- Create admin table
+-- =====================================================
+-- CONSOLIDATED ADMIN SYSTEM SETUP
+-- This migration consolidates all admin-related tables
+-- and removes conflicts from previous migrations
+-- =====================================================
+
+-- Step 1: Drop old conflicting tables if they exist
+DROP TABLE IF EXISTS public.admin_roles CASCADE;
+DROP TABLE IF EXISTS public.admin_actions CASCADE;
+DROP TABLE IF EXISTS public.admins CASCADE;
+
+-- Step 2: Create the new admins table
 CREATE TABLE public.admins (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
@@ -11,7 +22,7 @@ CREATE TABLE public.admins (
     notes TEXT
 );
 
--- Create admin_actions table for audit trail
+-- Step 3: Create admin_actions table for audit trail
 CREATE TABLE public.admin_actions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     admin_id UUID REFERENCES public.admins(id) ON DELETE CASCADE NOT NULL,
@@ -24,11 +35,11 @@ CREATE TABLE public.admin_actions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- Enable RLS on admin tables
+-- Step 4: Enable RLS on admin tables
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_actions ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies for admins table
+-- Step 5: Create RLS policies for admins table
 CREATE POLICY "Only admins can view admin table" ON public.admins 
     FOR SELECT USING (
         EXISTS (
@@ -45,7 +56,7 @@ CREATE POLICY "Only super admins can insert/update admin table" ON public.admins
         )
     );
 
--- Create RLS policies for admin_actions table
+-- Step 6: Create RLS policies for admin_actions table
 CREATE POLICY "Only admins can view admin actions" ON public.admin_actions 
     FOR SELECT USING (
         EXISTS (
@@ -62,7 +73,7 @@ CREATE POLICY "Only admins can insert admin actions" ON public.admin_actions
         )
     );
 
--- Create function to check if user is admin
+-- Step 7: Create helper functions
 CREATE OR REPLACE FUNCTION public.is_admin(user_uuid UUID DEFAULT auth.uid())
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -73,7 +84,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create function to check if user is super admin
 CREATE OR REPLACE FUNCTION public.is_super_admin(user_uuid UUID DEFAULT auth.uid())
 RETURNS BOOLEAN AS $$
 BEGIN
@@ -84,7 +94,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create function to log admin actions
 CREATE OR REPLACE FUNCTION public.log_admin_action(
     action_type TEXT,
     target_type TEXT,
@@ -112,12 +121,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Add trigger for updated_at on admins table
+-- Step 8: Add trigger for updated_at on admins table
 CREATE TRIGGER update_admins_updated_at 
     BEFORE UPDATE ON public.admins 
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
--- Create indexes for better performance
+-- Step 9: Create indexes for better performance
 CREATE INDEX idx_admins_user_id ON public.admins(user_id);
 CREATE INDEX idx_admins_role ON public.admins(role);
 CREATE INDEX idx_admins_is_active ON public.admins(is_active);
@@ -125,9 +134,28 @@ CREATE INDEX idx_admin_actions_admin_id ON public.admin_actions(admin_id);
 CREATE INDEX idx_admin_actions_created_at ON public.admin_actions(created_at);
 CREATE INDEX idx_admin_actions_action_type ON public.admin_actions(action_type);
 
--- Grant necessary permissions
+-- Step 10: Grant necessary permissions
 GRANT SELECT ON public.admins TO authenticated;
 GRANT SELECT ON public.admin_actions TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_admin(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_super_admin(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.log_admin_action(TEXT, TEXT, UUID, JSONB) TO authenticated;
+
+-- Step 11: Create the super admin user (baraiyaurvish611@gmail.com)
+-- Note: This will be handled by the setup-admin.js script, not here
+-- to avoid hardcoding passwords in migrations
+
+-- Step 12: Verify the setup
+DO $$
+BEGIN
+    -- Check if tables were created successfully
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'admins') THEN
+        RAISE EXCEPTION 'Failed to create admins table';
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'admin_actions') THEN
+        RAISE EXCEPTION 'Failed to create admin_actions table';
+    END IF;
+    
+    RAISE NOTICE 'Admin system setup completed successfully!';
+END $$;

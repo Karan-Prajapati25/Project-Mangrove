@@ -9,20 +9,18 @@ const ADMIN_DISPLAY_NAME = 'Urvish Baraiya';
 const ADMIN_COUNTRY = 'India';
 
 async function setupAdmin() {
-  console.log('🔧 Setting up admin user...\n');
+  console.log('🔧 Setting up super admin user...\n');
 
   try {
-    // Step 1: Create user in Supabase Auth
+    // Step 1: Create user in Supabase Auth using admin API
     console.log('1. Creating user in Supabase Auth...');
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: ADMIN_EMAIL,
       password: ADMIN_PASSWORD,
-      options: {
-        emailRedirectTo: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/confirm`,
-        data: {
-          display_name: ADMIN_DISPLAY_NAME,
-          country: ADMIN_COUNTRY
-        }
+      email_confirm: true, // Auto-confirm the email
+      user_metadata: {
+        display_name: ADMIN_DISPLAY_NAME,
+        country: ADMIN_COUNTRY
       }
     });
 
@@ -48,8 +46,7 @@ async function setupAdmin() {
           display_name: ADMIN_DISPLAY_NAME,
           country: ADMIN_COUNTRY,
           points: 1000, // Admin gets bonus points
-          rank: 1,
-          is_admin: true
+          rank: 1
         }
       ]);
 
@@ -76,37 +73,44 @@ async function setupAdmin() {
       console.log('✅ Coins record created successfully');
     }
 
-    // Step 4: Create admin role record
-    console.log('\n4. Creating admin role...');
-    const { error: adminRoleError } = await supabase
-      .from('admin_roles')
+    // Step 4: Create admin record in new admins table
+    console.log('\n4. Creating super admin record...');
+    const { error: adminError } = await supabase
+      .from('admins')
       .insert([
         {
           user_id: authData.user.id,
-          role_type: 'Super Admin',
-          verification_status: 'Approved',
-          approved_at: new Date().toISOString(),
-          approved_by: authData.user.id, // Self-approved for first admin
-          admin_notes: 'Initial super admin setup',
-          permissions: ['user_management', 'admin_management', 'report_management', 'system_admin']
+          role: 'super_admin',
+          permissions: [
+            'read_reports',
+            'manage_users', 
+            'view_analytics',
+            'manage_admins',
+            'manage_content',
+            'moderate_reports'
+          ],
+          is_active: true,
+          created_by: authData.user.id, // Self-created for first admin
+          notes: 'Initial super admin setup - Urvish Baraiya'
         }
       ]);
 
-    if (adminRoleError) {
-      console.error('❌ Admin role creation failed:', adminRoleError.message);
+    if (adminError) {
+      console.error('❌ Admin creation failed:', adminError.message);
+      console.error('Error details:', adminError);
+      return;
     } else {
-      console.log('✅ Admin role created successfully');
+      console.log('✅ Super admin record created successfully');
     }
 
     // Step 5: Verify setup
     console.log('\n5. Verifying admin setup...');
     const { data: adminUser, error: verifyError } = await supabase
-      .from('admin_roles')
+      .from('admins')
       .select(`
         *,
         profiles:user_id (
           display_name,
-          email:user_id,
           country,
           points,
           rank
@@ -118,24 +122,30 @@ async function setupAdmin() {
     if (verifyError) {
       console.error('❌ Verification failed:', verifyError.message);
     } else {
-      console.log('✅ Admin setup verified successfully!');
-      console.log('\n📋 Admin User Details:');
+      console.log('✅ Super admin setup verified successfully!');
+      console.log('\n📋 Super Admin User Details:');
       console.log(`   ID: ${adminUser.user_id}`);
       console.log(`   Email: ${ADMIN_EMAIL}`);
       console.log(`   Display Name: ${adminUser.profiles.display_name}`);
-      console.log(`   Role: ${adminUser.role_type}`);
-      console(`   Status: ${adminUser.verification_status}`);
+      console.log(`   Role: ${adminUser.role}`);
+      console.log(`   Status: ${adminUser.is_active ? 'Active' : 'Inactive'}`);
       console.log(`   Permissions: ${adminUser.permissions.join(', ')}`);
     }
 
-    console.log('\n🎉 Admin user setup completed!');
+    console.log('\n🎉 Super admin user setup completed!');
     console.log(`\n📧 Login credentials:`);
     console.log(`   Email: ${ADMIN_EMAIL}`);
     console.log(`   Password: ${ADMIN_PASSWORD}`);
     console.log('\n⚠️  Please change the password after first login!');
+    console.log('\n🔑 This user has SUPER ADMIN privileges and can:');
+    console.log('   • Manage other admins');
+    console.log('   • Access all admin features');
+    console.log('   • View all reports and analytics');
+    console.log('   • Manage users and content');
 
   } catch (error) {
     console.error('❌ Setup failed:', error.message);
+    console.error('Full error:', error);
   }
 }
 
