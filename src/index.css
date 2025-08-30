@@ -1,0 +1,226 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MangroveGuard Design System - Coastal & Marine Inspired */
+
+@layer base {
+  :root {
+    /* Base colors - Ocean and Coastal theme */
+    --background: 210 20% 98%;
+    --foreground: 200 50% 15%;
+
+    /* Card system */
+    --card: 210 15% 99%;
+    --card-foreground: 200 50% 15%;
+
+    --popover: 210 15% 99%;
+    --popover-foreground: 200 50% 15%;
+
+    /* Primary - Deep Ocean Blue */
+    --primary: 205 100% 25%;
+    --primary-foreground: 210 40% 98%;
+    --primary-light: 205 100% 45%;
+    --primary-dark: 205 100% 15%;
+
+    /* Secondary - Mangrove Green */
+    --secondary: 158 60% 30%;
+    --secondary-foreground: 210 40% 98%;
+    --secondary-light: 158 60% 50%;
+    --secondary-dark: 158 60% 20%;
+
+    /* Accent - Coral/Sunset */
+    --accent: 25 95% 65%;
+    --accent-foreground: 200 50% 15%;
+    --accent-light: 25 95% 75%;
+    --accent-dark: 25 95% 45%;
+
+    /* Muted - Sandy tones */
+    --muted: 45 25% 92%;
+    --muted-foreground: 200 25% 45%;
+
+    /* Status colors */
+    --success: 158 60% 40%;
+    --success-foreground: 210 40% 98%;
+    --warning: 45 100% 60%;
+    --warning-foreground: 200 50% 15%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* UI elements */
+    --border: 200 20% 85%;
+    --input: 200 20% 90%;
+    --ring: 205 100% 45%;
+
+    /* Gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(205 100% 25%), hsl(210 100% 35%));
+    --gradient-mangrove: linear-gradient(135deg, hsl(158 60% 30%), hsl(150 50% 40%));
+    --gradient-sunset: linear-gradient(135deg, hsl(25 95% 65%), hsl(35 90% 70%));
+    --gradient-hero: linear-gradient(135deg, hsl(205 100% 25%), hsl(158 60% 30%));
+    --gradient-card: linear-gradient(135deg, hsl(210 15% 99%), hsl(200 20% 96%));
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px -2px hsl(200 50% 15% / 0.1);
+    --shadow-medium: 0 8px 30px -4px hsl(200 50% 15% / 0.15);
+    --shadow-strong: 0 16px 40px -8px hsl(200 50% 15% / 0.2);
+    --shadow-ocean: 0 8px 32px -4px hsl(205 100% 25% / 0.3);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark mode - Deep ocean depths */
+    --background: 200 60% 8%;
+    --foreground: 210 40% 95%;
+
+    --card: 200 55% 12%;
+    --card-foreground: 210 40% 95%;
+
+    --popover: 200 55% 12%;
+    --popover-foreground: 210 40% 95%;
+
+    --primary: 205 100% 55%;
+    --primary-foreground: 200 60% 8%;
+    --primary-light: 205 100% 65%;
+    --primary-dark: 205 100% 35%;
+
+    --secondary: 158 60% 45%;
+    --secondary-foreground: 200 60% 8%;
+    --secondary-light: 158 60% 60%;
+    --secondary-dark: 158 60% 30%;
+
+    --accent: 25 95% 70%;
+    --accent-foreground: 200 60% 8%;
+    --accent-light: 25 95% 80%;
+    --accent-dark: 25 95% 50%;
+
+    --muted: 200 30% 18%;
+    --muted-foreground: 200 20% 65%;
+
+    --success: 158 60% 45%;
+    --success-foreground: 200 60% 8%;
+    --warning: 45 100% 65%;
+    --warning-foreground: 200 60% 8%;
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 210 40% 95%;
+
+    --border: 200 30% 20%;
+    --input: 200 30% 18%;
+    --ring: 205 100% 55%;
+
+    /* Dark gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(205 100% 35%), hsl(210 100% 45%));
+    --gradient-mangrove: linear-gradient(135deg, hsl(158 60% 40%), hsl(150 50% 50%));
+    --gradient-sunset: linear-gradient(135deg, hsl(25 95% 70%), hsl(35 90% 75%));
+    --gradient-hero: linear-gradient(135deg, hsl(205 100% 35%), hsl(158 60% 40%));
+    --gradient-card: linear-gradient(135deg, hsl(200 55% 12%), hsl(200 50% 15%));
+
+    /* Dark shadows */
+    --shadow-soft: 0 4px 20px -2px hsl(200 60% 5% / 0.4);
+    --shadow-medium: 0 8px 30px -4px hsl(200 60% 5% / 0.5);
+    --shadow-strong: 0 16px 40px -8px hsl(200 60% 5% / 0.6);
+    --shadow-ocean: 0 8px 32px -4px hsl(205 100% 25% / 0.5);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Custom animations */
+  @keyframes wave {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-5px) rotate(1deg); }
+    66% { transform: translateY(5px) rotate(-1deg); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+  }
+
+  .animate-wave {
+    animation: wave 3s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-ocean {
+    background: var(--gradient-ocean);
+  }
+  
+  .bg-gradient-mangrove {
+    background: var(--gradient-mangrove);
+  }
+  
+  .bg-gradient-sunset {
+    background: var(--gradient-sunset);
+  }
+  
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .bg-gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .shadow-strong {
+    box-shadow: var(--shadow-strong);
+  }
+
+  .shadow-ocean {
+    box-shadow: var(--shadow-ocean);
+  }
+
+  .text-gradient {
+    background: var(--gradient-ocean);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
