@@ -14,12 +14,49 @@ import {
   TrendingUp,
   Users,
   Star,
-  Target
+  Target,
+  Globe,
+  Calendar,
+  Clock
 } from 'lucide-react';
 
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState('global');
   const { leaderboard, userRank, achievements: dbAchievements, loading } = useLeaderboard();
+
+  // Different point systems for each ranking type
+  const pointSystems = {
+    global: {
+      title: 'Global Rankings',
+      icon: Globe,
+      description: 'Lifetime achievements with maximum rewards',
+      multiplier: 1.0, // Full points
+      maxPoints: 15000,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      borderColor: 'border-yellow-200'
+    },
+    monthly: {
+      title: 'Monthly Rankings',
+      icon: Calendar,
+      description: 'Monthly performance with high rewards',
+      multiplier: 0.7, // 70% of global points
+      maxPoints: 10500,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200'
+    },
+    weekly: {
+      title: 'Weekly Rankings',
+      icon: Clock,
+      description: 'Weekly achievements with moderate rewards',
+      multiplier: 0.4, // 40% of global points
+      maxPoints: 6000,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200'
+    }
+  };
 
   const globalLeaders = [
     {
@@ -79,6 +116,27 @@ const Leaderboard = () => {
     }
   ];
 
+  // Generate monthly and weekly rankings with adjusted points
+  const monthlyLeaders = globalLeaders.map(leader => ({
+    ...leader,
+    points: Math.round(leader.points * pointSystems.monthly.multiplier),
+    change: `+${Math.round(parseInt(leader.change.replace('+', '')) * pointSystems.monthly.multiplier)}`
+  }));
+
+  const weeklyLeaders = globalLeaders.map(leader => ({
+    ...leader,
+    points: Math.round(leader.points * pointSystems.weekly.multiplier),
+    change: `+${Math.round(parseInt(leader.change.replace('+', '')) * pointSystems.weekly.multiplier)}`
+  }));
+
+  const getCurrentLeaders = () => {
+    switch (activeTab) {
+      case 'monthly': return monthlyLeaders;
+      case 'weekly': return weeklyLeaders;
+      default: return globalLeaders;
+    }
+  };
+
   const badges = [
     { name: 'First Report', icon: '🥇', description: 'Submit your first incident report', earned: true },
     { name: 'Guardian Elite', icon: '👑', description: 'Reach 10,000 points', earned: true },
@@ -113,6 +171,9 @@ const Leaderboard = () => {
     }
   };
 
+  const currentSystem = pointSystems[activeTab as keyof typeof pointSystems];
+  const Icon = currentSystem.icon;
+
   return (
     <>
       <Navigation />
@@ -131,6 +192,41 @@ const Leaderboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Point System Info */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Icon className={`h-5 w-5 ${currentSystem.color}`} />
+              {currentSystem.title}
+            </CardTitle>
+            <p className="text-muted-foreground">{currentSystem.description}</p>
+          </CardHeader>
+          <CardContent>
+            <div className={`p-4 rounded-lg ${currentSystem.bgColor} ${currentSystem.borderColor} border`}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className={`text-2xl font-bold ${currentSystem.color}`}>
+                    {currentSystem.maxPoints.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Maximum Points</div>
+                </div>
+                <div>
+                  <div className={`text-2xl font-bold ${currentSystem.color}`}>
+                    {Math.round(currentSystem.multiplier * 100)}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">Point Multiplier</div>
+                </div>
+                <div>
+                  <div className={`text-2xl font-bold ${currentSystem.color}`}>
+                    {currentSystem.multiplier === 1.0 ? 'Full' : currentSystem.multiplier === 0.7 ? 'High' : 'Moderate'}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Reward Level</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* User Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {achievements.map((achievement) => {
@@ -170,19 +266,28 @@ const Leaderboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Global Rankings
+                  Rankings
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-3 mb-6">
-                    <TabsTrigger value="global">Global</TabsTrigger>
-                    <TabsTrigger value="monthly">This Month</TabsTrigger>
-                    <TabsTrigger value="weekly">This Week</TabsTrigger>
+                    <TabsTrigger value="global" className="flex items-center gap-2">
+                      <Globe className="h-4 w-4" />
+                      Global
+                    </TabsTrigger>
+                    <TabsTrigger value="monthly" className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Monthly
+                    </TabsTrigger>
+                    <TabsTrigger value="weekly" className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Weekly
+                    </TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value={activeTab} className="space-y-4">
-                    {globalLeaders.map((leader) => (
+                    {getCurrentLeaders().map((leader) => (
                       <div 
                         key={leader.rank}
                         className={`flex items-center gap-4 p-4 rounded-lg border transition-all duration-300 hover:scale-[1.02] ${getRankStyle(leader.rank)}`}
@@ -206,7 +311,9 @@ const Leaderboard = () => {
                         </div>
                         
                         <div className="text-right">
-                          <div className="font-bold text-lg text-primary">{leader.points.toLocaleString()}</div>
+                          <div className={`font-bold text-lg ${currentSystem.color}`}>
+                            {leader.points.toLocaleString()}
+                          </div>
                           <div className="text-xs text-muted-foreground">
                             {leader.reports} reports • {leader.verified} verified
                           </div>
@@ -252,6 +359,42 @@ const Leaderboard = () => {
                   <Button variant="ocean" className="w-full">
                     View Profile
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Point System Comparison */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Point Systems</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-2 rounded-lg bg-yellow-50 border border-yellow-200">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm font-medium">Global</span>
+                  </div>
+                  <Badge variant="secondary" className="text-yellow-700 bg-yellow-100">
+                    100% Points
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50 border border-blue-200">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium">Monthly</span>
+                  </div>
+                  <Badge variant="secondary" className="text-blue-700 bg-blue-100">
+                    70% Points
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-lg bg-green-50 border border-green-200">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-green-600" />
+                    <span className="text-sm font-medium">Weekly</span>
+                  </div>
+                  <Badge variant="secondary" className="text-green-700 bg-green-100">
+                    40% Points
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
