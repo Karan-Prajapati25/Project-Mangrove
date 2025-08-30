@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
+import GoogleMap from '@/components/GoogleMap';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,14 +13,32 @@ import {
   CheckCircle, 
   Clock,
   Satellite,
-  Layers
+  Layers,
+  Info
 } from 'lucide-react';
-import mangroveAerial from '@/assets/mangrove-aerial.jpg';
+
+interface MapMarker {
+  id: string;
+  position: {
+    lat: number;
+    lng: number;
+  };
+  title: string;
+  description: string;
+  severity: 'Low' | 'Medium' | 'High' | 'Critical';
+  status: 'Pending' | 'Investigating' | 'Resolved' | 'Dismissed';
+  type: string;
+  date: string;
+  reporter: string;
+  evidence?: string[];
+}
 
 const Map = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const { reports, loading } = useReports();
   const [filteredReports, setFilteredReports] = useState(reports);
+  const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 21.9, lng: 89.4 }); // Sundarbans
 
   useEffect(() => {
     filterReports();
@@ -45,38 +64,34 @@ const Map = () => {
     setFilteredReports(filtered);
   };
 
-  const mockReports = [
-    {
-      id: 1,
-      title: 'Illegal Logging Activity',
-      location: 'Sundarbans, Bangladesh',
-      severity: 'high',
-      status: 'verified',
-      date: '2024-01-15',
-      coordinates: [89.4, 21.9],
-      reporter: 'Local Guardian Network'
+  // Convert reports to map markers
+  const mapMarkers: MapMarker[] = filteredReports.map(report => ({
+    id: report.id,
+    position: {
+      lat: report.latitude || 21.9,
+      lng: report.longitude || 89.4
     },
-    {
-      id: 2,
-      title: 'Water Pollution Detected',
-      location: 'Everglades, Florida',
-      severity: 'medium',
-      status: 'pending',
-      date: '2024-01-12',
-      coordinates: [-80.9, 25.3],
-      reporter: 'Environmental Scientist'
-    },
-    {
-      id: 3,
-      title: 'Healthy Mangrove Growth',
-      location: 'Great Barrier Reef, Australia',
-      severity: 'low',
-      status: 'verified',
-      date: '2024-01-10',
-      coordinates: [145.7, -16.2],
-      reporter: 'Marine Biologist'
-    }
-  ];
+    title: report.title,
+    description: report.description || 'No description available',
+    severity: report.severity as 'Low' | 'Medium' | 'High' | 'Critical',
+    status: report.status as 'Pending' | 'Investigating' | 'Resolved' | 'Dismissed',
+    type: report.incident_type,
+    date: report.created_at,
+    reporter: 'Guardian User',
+    evidence: report.evidence_urls || []
+  }));
+
+  // Handle marker click
+  const handleMarkerClick = (marker: MapMarker) => {
+    setSelectedMarker(marker);
+    setMapCenter(marker.position);
+  };
+
+  // Handle map click
+  const handleMapClick = (position: { lat: number; lng: number }) => {
+    console.log('Map clicked at:', position);
+    // You can add functionality here, like opening a form to create a new report
+  };
 
   const filters = [
     { id: 'all', label: 'All Reports', count: reports.length },
@@ -171,59 +186,61 @@ const Map = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Selected Marker Info */}
+            {selectedMarker && (
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Info className="h-4 w-4" />
+                    Selected Report
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1">{selectedMarker.title}</h4>
+                    <p className="text-xs text-muted-foreground mb-2">{selectedMarker.description}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={getSeverityColor(selectedMarker.severity) as any} className="text-xs">
+                        {selectedMarker.severity}
+                      </Badge>
+                      <Badge variant={getStatusColor(selectedMarker.status) as any} className="text-xs">
+                        {selectedMarker.status}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    <p>Type: {selectedMarker.type}</p>
+                    <p>Date: {new Date(selectedMarker.date).toLocaleDateString()}</p>
+                    <p>Reporter: {selectedMarker.reporter}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Main Map Area */}
           <div className="lg:col-span-3">
             <Card className="mb-6">
-              <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden">
-                {/* Placeholder Map - In real app, this would be Mapbox */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10">
-                  <img 
-                    src={mangroveAerial} 
-                    alt="Mangrove Map" 
-                    className="w-full h-full object-cover opacity-50"
-                  />
-                  
-                  {/* Map Markers */}
-                  {filteredReports.slice(0, 10).map((report, index) => (
-                    <div
-                      key={report.id}
-                      className="absolute group cursor-pointer"
-                      style={{
-                        left: `${20 + (index % 5) * 15}%`,
-                        top: `${30 + Math.floor(index / 5) * 20}%`
-                      }}
-                    >
-                      <div className={`w-6 h-6 rounded-full border-2 border-white shadow-lg animate-pulse bg-${getSeverityColor(report.severity)}`} />
-                      
-                      {/* Tooltip */}
-                      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-card border border-border rounded-lg p-3 shadow-strong opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-48 z-10">
-                        <h4 className="font-semibold text-sm mb-1">{report.title}</h4>
-                        <p className="text-xs text-muted-foreground mb-2">{report.location}</p>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={getSeverityColor(report.severity) as any} className="text-xs">
-                            {report.severity}
-                          </Badge>
-                          <Badge variant={getStatusColor(report.status) as any} className="text-xs">
-                            {report.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Map Controls Overlay */}
-                <div className="absolute top-4 right-4 space-y-2">
-                  <Button size="icon" variant="outline" className="bg-white/90">
-                    <Satellite className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="outline" className="bg-white/90">
-                    <Layers className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Mangrove Ecosystem Monitor
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Click on markers to view report details. Use the controls to navigate and change map view.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <GoogleMap
+                  markers={mapMarkers}
+                  center={mapCenter}
+                  zoom={10}
+                  onMarkerClick={handleMarkerClick}
+                  onMapClick={handleMapClick}
+                  className="h-96 md:h-[500px]"
+                />
+              </CardContent>
             </Card>
 
             {/* Recent Reports */}

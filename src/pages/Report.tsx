@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navigation from '@/components/Navigation';
+import LocationPicker from '@/components/LocationPicker';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,7 +30,11 @@ const Report = () => {
     evidence: null as File | null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+    address: string;
+  } | null>(null);
   const { toast } = useToast();
   const { submitReport } = useReports();
   const { getCurrentLocation, reverseGeocode } = useGoogleMaps();
@@ -44,28 +49,14 @@ const Report = () => {
   ];
 
 
-  const handleGetCurrentLocation = async () => {
-    try {
-      const location = await getCurrentLocation();
-      setGpsLocation(location);
-      
-      // Get human-readable address
-      const address = await reverseGeocode(location);
-      if (address) {
-        setFormData({ ...formData, location: address });
-      }
-      
-      toast({
-        title: "Location captured",
-        description: `GPS coordinates: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Location error",
-        description: "Unable to get your current location. Please enter manually.",
-        variant: "destructive"
-      });
-    }
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+    setSelectedLocation(location);
+    setFormData({ ...formData, location: location.address });
+    
+    toast({
+      title: "Location selected",
+      description: `Location: ${location.address}`,
+    });
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,8 +90,8 @@ const Report = () => {
       description: formData.description,
       incident_type: formData.incidentType,
       location: formData.location || 'Location not specified',
-      latitude: gpsLocation?.lat,
-      longitude: gpsLocation?.lng,
+      latitude: selectedLocation?.lat,
+      longitude: selectedLocation?.lng,
       evidence_urls: formData.evidence ? [formData.evidence.name] : []
     };
 
@@ -114,7 +105,7 @@ const Report = () => {
         location: '',
         evidence: null
       });
-      setGpsLocation(null);
+      setSelectedLocation(null);
     }
 
     setIsSubmitting(false);
@@ -172,18 +163,10 @@ const Report = () => {
                   {/* Location */}
                   <div>
                     <Label htmlFor="location">Location</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="location"
-                        placeholder="Enter location or use GPS"
-                        value={gpsLocation ? `${gpsLocation.lat.toFixed(6)}, ${gpsLocation.lng.toFixed(6)}` : formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="flex-1"
-                      />
-                      <Button type="button" onClick={handleGetCurrentLocation} variant="outline" size="icon">
-                        <MapPin className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <LocationPicker
+                      onLocationSelect={handleLocationSelect}
+                      initialLocation={selectedLocation}
+                    />
                   </div>
 
                   {/* Description */}
