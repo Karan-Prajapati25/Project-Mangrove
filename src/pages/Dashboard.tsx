@@ -336,30 +336,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button variant="ocean" className="w-full justify-start">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Send Emergency Alert
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Review Pending Reports
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Inspection
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Award className="h-4 w-4 mr-2" />
-                  Manage Rewards
-                </Button>
-              </CardContent>
-            </Card>
+
           </div>
         </div>
       </div>

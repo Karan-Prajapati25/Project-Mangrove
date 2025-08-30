@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.1';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,7 +56,9 @@ serve(async (req) => {
         .from('coins')
         .insert({
           user_id: userId,
-          balance: amount
+          balance: amount,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
 
       if (insertError) {
@@ -64,11 +66,27 @@ serve(async (req) => {
       }
     }
 
+    // Log the transaction
+    const { error: logError } = await supabase
+      .from('coin_transactions')
+      .insert({
+        user_id: userId,
+        amount: amount,
+        type: 'award',
+        reason: reason,
+        created_at: new Date().toISOString()
+      });
+
+    if (logError) {
+      console.warn('Failed to log transaction:', logError);
+    }
+
     console.log(`Successfully awarded ${amount} coins to user ${userId} for: ${reason}`);
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: `Awarded ${amount} coins for ${reason}` 
+      message: `Awarded ${amount} coins for ${reason}`,
+      newBalance: existingCoins ? existingCoins.balance + amount : amount
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -77,7 +95,7 @@ serve(async (req) => {
     console.error('Error in award-coins function:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message 
+      error: error.message || 'Unknown error occurred'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -307,6 +307,102 @@ const Leaderboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Rewards Shop */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Rewards Shop
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center mb-4">
+                    <div className="text-2xl font-bold text-primary">3,420</div>
+                    <div className="text-sm text-muted-foreground">Points Available</div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 border border-border rounded-lg hover:border-primary/50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-gradient-ocean rounded-lg flex items-center justify-center text-white text-sm">
+                            🏆
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">Guardian Badge</div>
+                            <div className="text-xs text-muted-foreground">Exclusive profile badge</div>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-xs">500 pts</Badge>
+                      </div>
+                      <Button size="sm" variant="outline" className="w-full">
+                        Redeem
+                      </Button>
+                    </div>
+
+                    <div className="p-3 border border-border rounded-lg hover:border-primary/50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-gradient-sunset rounded-lg flex items-center justify-center text-white text-sm">
+                            🎨
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">Custom Avatar Frame</div>
+                            <div className="text-xs text-muted-foreground">Unique profile decoration</div>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-xs">1,000 pts</Badge>
+                      </div>
+                      <Button size="sm" variant="outline" className="w-full">
+                        Redeem
+                      </Button>
+                    </div>
+
+                    <div className="p-3 border border-border rounded-lg hover:border-primary/50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-gradient-card rounded-lg flex items-center justify-center text-white text-sm">
+                            📚
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">Premium Course Access</div>
+                            <div className="text-xs text-muted-foreground">Advanced conservation training</div>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-xs">2,500 pts</Badge>
+                      </div>
+                      <Button size="sm" variant="outline" className="w-full">
+                        Redeem
+                      </Button>
+                    </div>
+
+                    <div className="p-3 border border-border rounded-lg hover:border-primary/50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-gradient-hero rounded-lg flex items-center justify-center text-white text-sm">
+                            🌟
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">VIP Status</div>
+                            <div className="text-xs text-muted-foreground">Priority support & features</div>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-xs">5,000 pts</Badge>
+                      </div>
+                      <Button size="sm" variant="outline" className="w-full">
+                        Redeem
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button variant="outline" className="w-full">
+                    View All Rewards
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
