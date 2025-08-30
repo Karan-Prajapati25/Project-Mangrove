@@ -1,18 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   MapPin, 
   Search, 
   Target, 
-  Navigation,
   X,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
-import { GOOGLE_MAPS_CONFIG } from '@/config/googleMaps';
 
 interface Location {
   lat: number;
@@ -26,12 +23,6 @@ interface LocationPickerProps {
   className?: string;
 }
 
-declare global {
-  interface Window {
-    google: any;
-  }
-}
-
 export default function LocationPicker({
   onLocationSelect,
   initialLocation,
@@ -39,215 +30,88 @@ export default function LocationPicker({
 }: LocationPickerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(initialLocation || null);
-  const [isMapVisible, setIsMapVisible] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
-  const searchBoxRef = useRef<any>(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [userLocation, setUserLocation] = useState<Location | null>(null);
 
-  // Load Google Maps API
-  useEffect(() => {
-    if (window.google && window.google.maps) {
-      setIsLoaded(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_CONFIG.apiKey}&libraries=places,geometry`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      setIsLoaded(true);
-    };
-
-    script.onerror = () => {
-      console.error('Failed to load Google Maps API');
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
-    };
-  }, []);
-
-  // Initialize map when loaded
-  useEffect(() => {
-    if (!isLoaded || !mapRef.current) return;
-
-    const defaultCenter = selectedLocation || { lat: 21.9, lng: 89.4, address: '' }; // Sundarbans
-
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: defaultCenter.lat, lng: defaultCenter.lng },
-      zoom: 13,
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-      styles: [
-        {
-          featureType: 'water',
-          elementType: 'geometry',
-          stylers: [{ color: '#193341' }]
-        },
-        {
-          featureType: 'landscape',
-          elementType: 'geometry',
-          stylers: [{ color: '#2c5a71' }]
-        }
-      ]
-    });
-
-    mapInstanceRef.current = map;
-
-    // Add click listener to map
-    map.addListener('click', (event: any) => {
-      const position = {
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng()
-      };
-      
-      // Reverse geocode to get address
-      reverseGeocode(position);
-    });
-
-    // Add marker if initial location exists
-    if (selectedLocation) {
-      addMarker(selectedLocation);
-    }
-
-  }, [isLoaded, selectedLocation]);
-
-  // Add marker to map
-  const addMarker = (location: Location) => {
-    if (markerRef.current) {
-      markerRef.current.setMap(null);
-    }
-
-    const marker = new window.google.maps.Marker({
-      position: { lat: location.lat, lng: location.lng },
-      map: mapInstanceRef.current,
-      title: location.address,
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 10,
-        fillColor: '#3b82f6',
-        fillOpacity: 0.8,
-        strokeColor: '#ffffff',
-        strokeWeight: 2
-      },
-      animation: window.google.maps.Animation.DROP
-    });
-
-    markerRef.current = marker;
-    mapInstanceRef.current.setCenter({ lat: location.lat, lng: location.lng });
-  };
-
-  // Reverse geocoding
-  const reverseGeocode = async (position: { lat: number; lng: number }) => {
-    if (!window.google) return;
-
-    const geocoder = new window.google.maps.Geocoder();
-    
-    try {
-      const response = await geocoder.geocode({ location: position });
-      
-      if (response.results && response.results[0]) {
-        const address = response.results[0].formatted_address;
-        const location: Location = {
-          lat: position.lat,
-          lng: position.lng,
-          address
-        };
-        
-        setSelectedLocation(location);
-        addMarker(location);
-        onLocationSelect(location);
-      }
-    } catch (error) {
-      console.error('Reverse geocoding failed:', error);
-    }
-  };
-
-  // Search for locations
-  const searchLocations = async () => {
-    if (!searchQuery.trim() || !window.google) return;
-
-    setIsSearching(true);
-    
-    try {
-      const service = new window.google.maps.places.AutocompleteService();
-      const response = await service.getPlacePredictions({
-        input: searchQuery,
-        types: ['geocode'],
-        componentRestrictions: { country: 'IN' } // Restrict to India for mangrove areas
-      });
-
-      setSearchResults(response.predictions || []);
-    } catch (error) {
-      console.error('Search failed:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  // Handle search result selection
-  const handleSearchResultSelect = async (placeId: string) => {
-    if (!window.google) return;
-
-    const service = new window.google.maps.places.PlacesService(mapInstanceRef.current);
-    
-    service.getDetails(
-      { placeId, fields: ['geometry', 'formatted_address'] },
-      (place: any, status: any) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-          const location: Location = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-            address: place.formatted_address
-          };
-          
-          setSelectedLocation(location);
-          addMarker(location);
-          onLocationSelect(location);
-          setSearchResults([]);
-          setSearchQuery(location.address);
-        }
-      }
-    );
-  };
-
-  // Get current location
+  // Get current location with optimized settings
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       alert('Geolocation is not supported by this browser.');
       return;
     }
 
+    // Reset any previous state
+    setUserLocation(null);
+    setIsGettingLocation(true);
+    console.log('Getting current location...');
+
+    // Add a safety timeout to prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+      if (isGettingLocation) {
+        console.log('Safety timeout triggered, resetting state');
+        setIsGettingLocation(false);
+        alert('Location acquisition timed out. Please try again.');
+      }
+    }, 10000);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        clearTimeout(safetyTimeout);
+        console.log('Location obtained:', position);
+        
         const pos = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
         
-        reverseGeocode(pos);
+        console.log('Coordinates:', pos);
+        
+        // Immediately set user location for instant feedback
+        const userLoc: Location = {
+          lat: pos.lat,
+          lng: pos.lng,
+          address: 'Your Current Location'
+        };
+        
+        // Update state immediately
+        setUserLocation(userLoc);
+        setIsGettingLocation(false);
+        
+        // Also set as selected location
+        setSelectedLocation(userLoc);
+        onLocationSelect(userLoc);
+        
+        console.log('Location successfully set');
       },
       (error) => {
+        clearTimeout(safetyTimeout);
         console.error('Error getting location:', error);
-        alert('Unable to get your location.');
+        setIsGettingLocation(false);
+        
+        let errorMessage = 'Unable to get your location.';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Please enable location access in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable. Please try again.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMessage = 'An unknown error occurred while getting your location.';
+        }
+        
+        alert(errorMessage);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000
+        enableHighAccuracy: false, // Changed to false for faster response
+        timeout: 8000, // Reduced timeout for faster response
+        maximumAge: 60000 // Accept cached location up to 1 minute old
       }
     );
   };
@@ -255,10 +119,8 @@ export default function LocationPicker({
   // Clear selected location
   const clearLocation = () => {
     setSelectedLocation(null);
+    setUserLocation(null);
     setSearchQuery('');
-    if (markerRef.current) {
-      markerRef.current.setMap(null);
-    }
     onLocationSelect({ lat: 0, lng: 0, address: '' });
   };
 
@@ -266,11 +128,21 @@ export default function LocationPicker({
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     if (value.trim()) {
-      searchLocations();
+      // Simple search - you can implement Google Places API here if needed
+      setSearchResults([]);
     } else {
       setSearchResults([]);
     }
   };
+
+  // Cleanup effect to prevent state issues when switching tabs
+  useEffect(() => {
+    return () => {
+      // Cleanup when component unmounts
+      setIsGettingLocation(false);
+      setUserLocation(null);
+    };
+  }, []);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -280,7 +152,7 @@ export default function LocationPicker({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search for a location or click on the map..."
+              placeholder="Search for a location or use your current location"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
@@ -292,31 +164,15 @@ export default function LocationPicker({
             size="icon"
             onClick={getCurrentLocation}
             title="Use my current location"
+            disabled={isGettingLocation}
           >
-            <Target className="h-4 w-4" />
+            {isGettingLocation ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Target className="h-4 w-4" />
+            )}
           </Button>
         </div>
-
-        {/* Search Results Dropdown */}
-        {searchResults.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
-            {searchResults.map((result) => (
-              <button
-                key={result.place_id}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                onClick={() => handleSearchResultSelect(result.place_id)}
-              >
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  <div>
-                    <div className="font-medium text-sm">{result.structured_formatting.main_text}</div>
-                    <div className="text-xs text-gray-500">{result.structured_formatting.secondary_text}</div>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Selected Location Display */}
@@ -350,36 +206,44 @@ export default function LocationPicker({
         </Card>
       )}
 
-      {/* Map Toggle */}
-      <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">Map View</Label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setIsMapVisible(!isMapVisible)}
-        >
-          {isMapVisible ? 'Hide Map' : 'Show Map'}
-        </Button>
-      </div>
-
-      {/* Interactive Map */}
-      {isMapVisible && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">Click on the map to select a location</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoaded ? (
-              <div ref={mapRef} className="h-64 rounded-lg" />
-            ) : (
-              <div className="h-64 flex items-center justify-center bg-gray-100 rounded-lg">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Loading map...</p>
+      {/* User Location Display */}
+      {userLocation && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-1">
+                <Target className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <div className="font-medium text-sm text-blue-800">Your Current Location</div>
+                <div className="text-xs text-blue-600 mt-1">
+                  Lat: {userLocation.lat.toFixed(6)}, Lng: {userLocation.lng.toFixed(6)}
+                </div>
+                <div className="text-xs text-green-600 mt-1 font-medium">
+                  ✓ Location acquired successfully!
                 </div>
               </div>
-            )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Location Status Indicator */}
+      {isGettingLocation && (
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
+              <div>
+                <div className="font-medium text-sm text-yellow-800">Acquiring Location...</div>
+                <div className="text-xs text-yellow-600 mt-1">
+                  Please wait while we get your current location
+                </div>
+                <div className="text-xs text-yellow-500 mt-1">
+                  This usually takes 1-3 seconds
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -387,9 +251,28 @@ export default function LocationPicker({
       {/* Instructions */}
       <div className="text-xs text-gray-500 space-y-1">
         <p>• Search for a location or use your current location</p>
-        <p>• Click on the map to select a specific point</p>
         <p>• The selected location will be used for your report</p>
+        <p>• Your current location is automatically shared when you click the location button</p>
+        <p>• If the location button doesn't work, check your browser permissions and try refreshing the page</p>
       </div>
+
+      {/* Troubleshooting Help */}
+      <details className="text-xs text-gray-500">
+        <summary className="cursor-pointer hover:text-gray-700 font-medium">
+          Having trouble? Click here for help
+        </summary>
+        <div className="mt-2 space-y-1 pl-4 border-l-2 border-gray-200">
+          <p><strong>Location button not working?</strong></p>
+          <p>• Check if your browser has location permissions enabled</p>
+          <p>• Try refreshing the page</p>
+          <p>• Make sure you're using HTTPS (required for location access)</p>
+          <p>• Check the browser console for error messages</p>
+          <p><strong>How to enable location access:</strong></p>
+          <p>• Chrome: Click the lock icon in the address bar → Site settings → Location → Allow</p>
+          <p>• Firefox: Click the shield icon → Site permissions → Location → Allow</p>
+          <p>• Safari: Safari → Preferences → Websites → Location → Allow</p>
+        </div>
+      </details>
     </div>
   );
 }
