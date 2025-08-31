@@ -18,12 +18,82 @@ import {
   Camera,
   Shield,
   Globe,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
+
+// Import mangrove photos
+import mangroveAerial from '@/assets/mangrove-aerial.jpg';
+import mangroveHero from '@/assets/hero-mangroves.jpg';
+import mangroveIcon from '@/assets/mangrove-shield-icon.png';
 
 const Education = () => {
   const [activeTab, setActiveTab] = useState('courses');
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState('');
+  const [selectedPhotoTitle, setSelectedPhotoTitle] = useState('');
   const { courses: dbCourses, quizzes: dbQuizzes, guides: dbGuides, loading } = useEducation();
+
+  // Function to handle button clicks and show photos
+  const handleButtonClick = (action: string, title: string) => {
+    let photo = '';
+    let photoTitle = '';
+    
+    switch (action) {
+      case 'start_course':
+        photo = mangroveAerial;
+        photoTitle = 'Mangrove Ecosystem - Aerial View';
+        break;
+      case 'continue_course':
+        photo = mangroveHero;
+        photoTitle = 'Mangrove Conservation in Action';
+        break;
+      case 'view_certificate':
+        photo = mangroveIcon;
+        photoTitle = 'Mangrove Guardian Certificate';
+        break;
+      case 'start_quiz':
+        photo = mangroveAerial;
+        photoTitle = 'Mangrove Knowledge Test';
+        break;
+      case 'download_guide':
+        photo = mangroveHero;
+        photoTitle = 'Mangrove Field Guide';
+        break;
+      default:
+        photo = mangroveAerial;
+        photoTitle = 'Mangrove Education';
+    }
+    
+    setSelectedPhoto(photo);
+    setSelectedPhotoTitle(photoTitle);
+    setShowPhotoModal(true);
+  };
+
+  const closePhotoModal = () => {
+    setShowPhotoModal(false);
+    setSelectedPhoto('');
+    setSelectedPhotoTitle('');
+  };
+
+  // Handle ESC key press
+  React.useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showPhotoModal) {
+        closePhotoModal();
+      }
+    };
+
+    if (showPhotoModal) {
+      document.addEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showPhotoModal]);
 
   const courses = [
     {
@@ -257,6 +327,15 @@ const Education = () => {
                       <Button 
                         variant={course.completed ? "outline" : "ocean"} 
                         className="w-full mt-4 group"
+                        onClick={() => {
+                          if (course.completed) {
+                            handleButtonClick('view_certificate', course.title);
+                          } else if (course.progress > 0) {
+                            handleButtonClick('continue_course', course.title);
+                          } else {
+                            handleButtonClick('start_course', course.title);
+                          }
+                        }}
                       >
                         {course.completed ? (
                           <>
@@ -329,7 +408,7 @@ const Education = () => {
                         </div>
                       </div>
 
-                      <Button variant="ocean" className="w-full">
+                      <Button variant="ocean" className="w-full" onClick={() => handleButtonClick('start_quiz', quiz.title)}>
                         {quiz.bestScore ? 'Retake Quiz' : 'Start Quiz'}
                       </Button>
                     </div>
@@ -373,7 +452,7 @@ const Education = () => {
                     </Badge>
 
                     <div className="flex gap-2">
-                      <Button variant="ocean" className="flex-1">
+                      <Button variant="ocean" className="flex-1" onClick={() => handleButtonClick('download_guide', guide.title)}>
                         Download PDF
                       </Button>
                       <Button variant="outline" size="icon">
@@ -387,6 +466,41 @@ const Education = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Photo Modal */}
+      {showPhotoModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closePhotoModal}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-primary/10 to-accent/10">
+              <h3 className="text-xl font-semibold text-primary">{selectedPhotoTitle}</h3>
+              <button 
+                onClick={closePhotoModal} 
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="flex-1 p-6 overflow-auto">
+              <img 
+                src={selectedPhoto} 
+                alt={selectedPhotoTitle} 
+                className="w-full h-auto object-contain rounded-lg shadow-lg" 
+              />
+              <div className="mt-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Click outside or press ESC to close
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
