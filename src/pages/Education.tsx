@@ -32,6 +32,12 @@ const Education = () => {
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState('');
   const [selectedPhotoTitle, setSelectedPhotoTitle] = useState('');
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  const [currentQuiz, setCurrentQuiz] = useState<any>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<number[]>([]);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizScore, setQuizScore] = useState(0);
   const { courses: dbCourses, quizzes: dbQuizzes, guides: dbGuides, loading } = useEducation();
 
   // Function to handle button clicks and show photos
@@ -76,15 +82,74 @@ const Education = () => {
     setSelectedPhotoTitle('');
   };
 
+  const startQuiz = (quiz: any) => {
+    setCurrentQuiz(quiz);
+    setCurrentQuestionIndex(0);
+    setUserAnswers([]);
+    setQuizCompleted(false);
+    setQuizScore(0);
+    setShowQuizModal(true);
+  };
+
+  const closeQuizModal = () => {
+    setShowQuizModal(false);
+    setCurrentQuiz(null);
+    setCurrentQuestionIndex(0);
+    setUserAnswers([]);
+    setQuizCompleted(false);
+    setQuizScore(0);
+  };
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    const newAnswers = [...userAnswers];
+    newAnswers[currentQuestionIndex] = answerIndex;
+    setUserAnswers(newAnswers);
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestionIndex < currentQuiz.questionsList.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      // Quiz completed
+      calculateScore();
+      setQuizCompleted(true);
+    }
+  };
+
+  const previousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const calculateScore = () => {
+    let correct = 0;
+    userAnswers.forEach((answer, index) => {
+      if (answer === currentQuiz.questionsList[index].correctAnswer) {
+        correct++;
+      }
+    });
+    const score = Math.round((correct / currentQuiz.questionsList.length) * 100);
+    setQuizScore(score);
+  };
+
+  const retakeQuiz = () => {
+    setCurrentQuestionIndex(0);
+    setUserAnswers([]);
+    setQuizCompleted(false);
+    setQuizScore(0);
+  };
+
   // Handle ESC key press
   React.useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && showPhotoModal) {
-        closePhotoModal();
+      if (event.key === 'Escape') {
+        if (showPhotoModal) closePhotoModal();
+        if (showQuizModal) closeQuizModal();
       }
     };
 
-    if (showPhotoModal) {
+    if (showPhotoModal || showQuizModal) {
       document.addEventListener('keydown', handleEscKey);
       document.body.style.overflow = 'hidden'; // Prevent background scrolling
     }
@@ -93,7 +158,7 @@ const Education = () => {
       document.removeEventListener('keydown', handleEscKey);
       document.body.style.overflow = 'unset';
     };
-  }, [showPhotoModal]);
+  }, [showPhotoModal, showQuizModal]);
 
   const courses = [
     {
@@ -155,7 +220,39 @@ const Education = () => {
       bestScore: 87,
       attempts: 3,
       points: 150,
-      difficulty: 'Medium'
+      difficulty: 'Medium',
+      questionsList: [
+        {
+          question: "Which mangrove species is known for its distinctive 'prop roots' that arch above the water?",
+          options: ["Red Mangrove (Rhizophora mangle)", "Black Mangrove (Avicennia germinans)", "White Mangrove (Laguncularia racemosa)", "Buttonwood (Conocarpus erectus)"],
+          correctAnswer: 0,
+          explanation: "Red Mangroves have distinctive prop roots that arch above the water surface, providing stability and oxygen exchange."
+        },
+        {
+          question: "What is the primary function of pneumatophores in mangrove trees?",
+          options: ["Water absorption", "Oxygen absorption", "Nutrient storage", "Seed dispersal"],
+          correctAnswer: 1,
+          explanation: "Pneumatophores are specialized roots that grow upward from the soil to absorb oxygen in waterlogged conditions."
+        },
+        {
+          question: "Which mangrove species is most salt-tolerant?",
+          options: ["White Mangrove", "Black Mangrove", "Red Mangrove", "All are equally salt-tolerant"],
+          correctAnswer: 2,
+          explanation: "Red Mangroves are the most salt-tolerant and can be found closest to the ocean."
+        },
+        {
+          question: "What is the scientific name for the Black Mangrove?",
+          options: ["Rhizophora mangle", "Avicennia germinans", "Laguncularia racemosa", "Bruguiera gymnorrhiza"],
+          correctAnswer: 1,
+          explanation: "Avicennia germinans is the scientific name for the Black Mangrove."
+        },
+        {
+          question: "Which mangrove species produces 'pencil roots'?",
+          options: ["Red Mangrove", "Black Mangrove", "White Mangrove", "Buttonwood"],
+          correctAnswer: 1,
+          explanation: "Black Mangroves produce pencil-like pneumatophores that extend above the soil surface."
+        }
+      ]
     },
     {
       id: 2,
@@ -165,7 +262,39 @@ const Education = () => {
       bestScore: 94,
       attempts: 2,
       points: 200,
-      difficulty: 'Hard'
+      difficulty: 'Hard',
+      questionsList: [
+        {
+          question: "What is the most significant threat to mangrove ecosystems globally?",
+          options: ["Climate change", "Deforestation for aquaculture", "Pollution", "Invasive species"],
+          correctAnswer: 1,
+          explanation: "Deforestation for aquaculture (shrimp farming) is the leading cause of mangrove loss worldwide."
+        },
+        {
+          question: "How do rising sea levels affect mangrove ecosystems?",
+          options: ["They always benefit mangroves", "They can cause mangrove migration inland", "They have no effect", "They only affect young trees"],
+          correctAnswer: 1,
+          explanation: "Rising sea levels can cause mangroves to migrate inland, but this is limited by human development."
+        },
+        {
+          question: "What type of pollution is most harmful to mangrove roots?",
+          options: ["Air pollution", "Oil spills", "Plastic waste", "Noise pollution"],
+          correctAnswer: 1,
+          explanation: "Oil spills coat mangrove roots, preventing oxygen absorption and causing suffocation."
+        },
+        {
+          question: "Which human activity directly destroys mangrove habitats?",
+          options: ["Fishing", "Tourism", "Urban development", "Bird watching"],
+          correctAnswer: 2,
+          explanation: "Urban development directly removes mangrove forests and replaces them with buildings and infrastructure."
+        },
+        {
+          question: "What is the impact of climate change on mangrove flowering patterns?",
+          options: ["No change", "Earlier flowering", "Later flowering", "Complete cessation of flowering"],
+          correctAnswer: 1,
+          explanation: "Climate change can cause mangroves to flower earlier, disrupting pollination cycles."
+        }
+      ]
     },
     {
       id: 3,
@@ -175,7 +304,39 @@ const Education = () => {
       bestScore: null,
       attempts: 0,
       points: 100,
-      difficulty: 'Easy'
+      difficulty: 'Easy',
+      questionsList: [
+        {
+          question: "What is the most effective method for mangrove restoration?",
+          options: ["Planting any mangrove species", "Using native species from local sources", "Importing exotic species", "Artificial propagation only"],
+          correctAnswer: 1,
+          explanation: "Using native species from local sources ensures better survival and ecosystem compatibility."
+        },
+        {
+          question: "How can communities help protect mangrove forests?",
+          options: ["By cutting them down for firewood", "By establishing marine protected areas", "By building resorts nearby", "By ignoring them"],
+          correctAnswer: 1,
+          explanation: "Establishing marine protected areas helps conserve mangrove ecosystems and their biodiversity."
+        },
+        {
+          question: "What is the best approach to mangrove conservation?",
+          options: ["Protection only", "Restoration only", "Combined protection and restoration", "Commercial exploitation"],
+          correctAnswer: 2,
+          explanation: "A combined approach of protecting existing mangroves and restoring degraded areas is most effective."
+        },
+        {
+          question: "Why is education important for mangrove conservation?",
+          options: ["It's not important", "It increases awareness and community involvement", "It only benefits scientists", "It's required by law"],
+          correctAnswer: 1,
+          explanation: "Education increases public awareness and encourages community involvement in conservation efforts."
+        },
+        {
+          question: "What role do mangroves play in climate change mitigation?",
+          options: ["No role", "They absorb CO2 and store carbon", "They only provide shade", "They increase temperatures"],
+          correctAnswer: 1,
+          explanation: "Mangroves are excellent carbon sinks, absorbing CO2 and storing carbon in their biomass and soil."
+        }
+      ]
     }
   ];
 
@@ -408,7 +569,11 @@ const Education = () => {
                         </div>
                       </div>
 
-                      <Button variant="ocean" className="w-full" onClick={() => handleButtonClick('start_quiz', quiz.title)}>
+                      <Button 
+                        variant="ocean" 
+                        className="w-full" 
+                        onClick={() => startQuiz(quiz)}
+                      >
                         {quiz.bestScore ? 'Retake Quiz' : 'Start Quiz'}
                       </Button>
                     </div>
@@ -497,6 +662,139 @@ const Education = () => {
                   Click outside or press ESC to close
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quiz Modal */}
+      {showQuizModal && currentQuiz && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closeQuizModal}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+              <div>
+                <h3 className="text-2xl font-bold text-blue-900">{currentQuiz.title}</h3>
+                <p className="text-blue-700 mt-1">
+                  Question {currentQuestionIndex + 1} of {currentQuiz.questionsList.length}
+                </p>
+              </div>
+              <button 
+                onClick={closeQuizModal} 
+                className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-2 rounded-full hover:bg-gray-100"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="flex-1 p-6 overflow-auto">
+              {!quizCompleted ? (
+                <div className="space-y-6">
+                  {/* Question */}
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                      {currentQuiz.questionsList[currentQuestionIndex].question}
+                    </h4>
+                    
+                    {/* Answer Options */}
+                    <div className="space-y-3">
+                      {currentQuiz.questionsList[currentQuestionIndex].options.map((option, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleAnswerSelect(index)}
+                          className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
+                            userAnswers[currentQuestionIndex] === index
+                              ? 'border-blue-500 bg-blue-50 text-blue-900'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span className="font-medium">{String.fromCharCode(65 + index)}.</span> {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="flex justify-between items-center">
+                    <Button
+                      variant="outline"
+                      onClick={previousQuestion}
+                      disabled={currentQuestionIndex === 0}
+                    >
+                      Previous
+                    </Button>
+                    
+                    <div className="text-sm text-gray-600">
+                      {userAnswers.filter(answer => answer !== undefined).length} of {currentQuiz.questionsList.length} answered
+                    </div>
+                    
+                    <Button
+                      onClick={nextQuestion}
+                      disabled={userAnswers[currentQuestionIndex] === undefined}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      {currentQuestionIndex === currentQuiz.questionsList.length - 1 ? 'Finish Quiz' : 'Next'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* Quiz Results */
+                <div className="text-center space-y-6">
+                  <div className="text-6xl mb-4">
+                    {quizScore >= 80 ? '🎉' : quizScore >= 60 ? '👍' : '📚'}
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-gray-900">
+                    Quiz Completed!
+                  </h3>
+                  
+                  <div className="text-4xl font-bold text-blue-600">
+                    {quizScore}%
+                  </div>
+                  
+                  <p className="text-gray-600">
+                    You answered {Math.round((quizScore / 100) * currentQuiz.questionsList.length)} out of {currentQuiz.questionsList.length} questions correctly.
+                  </p>
+                  
+                  {quizScore >= 80 && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <p className="text-green-800 font-medium">
+                        🏆 Excellent! You've mastered this topic!
+                      </p>
+                    </div>
+                  )}
+                  
+                  {quizScore >= 60 && quizScore < 80 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <p className="text-yellow-800 font-medium">
+                        📖 Good job! Keep learning to improve further.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {quizScore < 60 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <p className="text-red-800 font-medium">
+                        📚 Don't worry! Review the material and try again.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-4 justify-center">
+                    <Button onClick={retakeQuiz} variant="outline">
+                      Retake Quiz
+                    </Button>
+                    <Button onClick={closeQuizModal} className="bg-blue-600 hover:bg-blue-700">
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
