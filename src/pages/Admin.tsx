@@ -4,7 +4,8 @@ import { supabase } from '../integrations/supabase/client';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Shield, Eye, EyeOff } from 'lucide-react';
+import { Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { isAdminEmail } from '../config/admin';
 
 const Admin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -20,7 +21,14 @@ const Admin: React.FC = () => {
     setError('');
 
     try {
-      // Simple authentication - just check if the user can sign in
+      // Check if email is in admin list first
+      if (!isAdminEmail(email)) {
+        setError('Access denied. This email is not authorized for admin access.');
+        setLoading(false);
+        return;
+      }
+
+      // Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -31,13 +39,13 @@ const Admin: React.FC = () => {
       if (data.user) {
         console.log('✅ User authenticated successfully:', data.user.email);
         
-        // For now, allow any authenticated user to access admin dashboard
-        // The dashboard will handle admin-specific logic
+        // Since email is in admin list, user is authorized
+        console.log('✅ Admin privileges verified');
         navigate('/admin-dashboard');
       }
     } catch (error: any) {
       console.error('❌ Login error:', error);
-      setError(error.message);
+      setError(error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -86,7 +94,8 @@ const Admin: React.FC = () => {
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
                 {error}
               </div>
             )}
@@ -105,8 +114,11 @@ const Admin: React.FC = () => {
               Demo Admin Credentials:
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Email: baraiyaurvish611@gmail.com<br />
-              Password: urvish123
+              Email: admin@mangrove.com<br />
+              Password: admin123
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Note: You need to create an account with an authorized admin email first
             </p>
           </div>
         </CardContent>

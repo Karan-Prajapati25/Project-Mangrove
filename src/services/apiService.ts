@@ -549,6 +549,24 @@ export class AdminService {
     }
   }
 
+  // Create admin user
+  static async createAdminUser(adminData: {
+    email: string;
+    password: string;
+    display_name: string;
+    role_type: string;
+  }): Promise<{ user: any; error: any }> {
+    try {
+      const { data, error } = await apiClient.post('/api/admin/users', adminData);
+      
+      if (error) throw new ApiError(400, error);
+      
+      return { user: data.user, error: null };
+    } catch (error) {
+      return { user: null, error };
+    }
+  }
+
   // Get user details
   static async getUser(userId: string): Promise<{ user: any; error: any }> {
     try {
