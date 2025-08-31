@@ -347,7 +347,8 @@ const Education = () => {
       pages: 45,
       downloads: 2340,
       category: 'Identification',
-      featured: true
+      featured: true,
+      googleLink: 'https://www.google.com/search?q=mangrove+species+identification+guide+field+manual'
     },
     {
       title: 'Threat Assessment Handbook',
@@ -355,7 +356,8 @@ const Education = () => {
       pages: 28,
       downloads: 1890,
       category: 'Assessment',
-      featured: false
+      featured: false,
+      googleLink: 'https://www.google.com/search?q=mangrove+ecosystem+threat+assessment+conservation'
     },
     {
       title: 'Conservation Best Practices',
@@ -363,7 +365,35 @@ const Education = () => {
       pages: 38,
       downloads: 1567,
       category: 'Conservation',
-      featured: true
+      featured: true,
+      googleLink: 'https://www.google.com/search?q=mangrove+conservation+best+practices+restoration+methods'
+    },
+    {
+      title: 'Mangrove Ecology Research',
+      description: 'Latest research findings on mangrove ecosystem dynamics and biodiversity.',
+      pages: 52,
+      downloads: 1234,
+      category: 'Research',
+      featured: false,
+      googleLink: 'https://www.google.com/search?q=mangrove+ecology+research+papers+studies'
+    },
+    {
+      title: 'Community Engagement Guide',
+      description: 'How to involve local communities in mangrove conservation efforts.',
+      pages: 31,
+      downloads: 987,
+      category: 'Community',
+      featured: false,
+      googleLink: 'https://www.google.com/search?q=mangrove+community+engagement+conservation+programs'
+    },
+    {
+      title: 'Climate Change & Mangroves',
+      description: 'Understanding the impact of climate change on mangrove ecosystems.',
+      pages: 41,
+      downloads: 1456,
+      category: 'Climate',
+      featured: true,
+      googleLink: 'https://www.google.com/search?q=climate+change+mangrove+ecosystems+impact+adaptation'
     }
   ];
 
@@ -620,7 +650,13 @@ const Education = () => {
                       <Button variant="ocean" className="flex-1" onClick={() => handleButtonClick('download_guide', guide.title)}>
                         Download PDF
                       </Button>
-                      <Button variant="outline" size="icon">
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => window.open(guide.googleLink, '_blank')}
+                        title={`Search "${guide.title}" on Google`}
+                        className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200"
+                      >
                         <Globe className="h-4 w-4" />
                       </Button>
                     </div>

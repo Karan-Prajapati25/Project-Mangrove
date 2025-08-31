@@ -80,7 +80,7 @@ const Dashboard = () => {
     ]);
   };
 
-  const recentReports = reports.slice(0, 4).map(report => ({
+  const recentReports = reports && reports.length > 0 ? reports.slice(0, 4).map(report => ({
     id: `#${report.id.slice(-4)}`,
     title: report.title,
     location: report.location,
@@ -89,7 +89,48 @@ const Dashboard = () => {
     reporter: 'Guardian User',
     time: new Date(report.created_at).toLocaleDateString(),
     aiConfidence: Math.floor(Math.random() * 20) + 80 // Mock AI confidence
-  }));
+  })) : [
+    {
+      id: '#001',
+      title: 'Illegal Deforestation Detected',
+      location: 'Mangrove Bay, Florida',
+      status: 'pending',
+      severity: 'critical',
+      reporter: 'Guardian User',
+      time: new Date().toLocaleDateString(),
+      aiConfidence: 95
+    },
+    {
+      id: '#002',
+      title: 'Water Quality Alert',
+      location: 'Everglades National Park',
+      status: 'investigating',
+      severity: 'medium',
+      reporter: 'Guardian User',
+      time: new Date(Date.now() - 86400000).toLocaleDateString(),
+      aiConfidence: 87
+    },
+    {
+      id: '#003',
+      title: 'Mangrove Restoration Progress',
+      location: 'Mumbai Coastal Area',
+      status: 'verified',
+      severity: 'low',
+      reporter: 'Guardian User',
+      time: new Date(Date.now() - 172800000).toLocaleDateString(),
+      aiConfidence: 92
+    },
+    {
+      id: '#004',
+      title: 'Storm Damage Assessment',
+      location: 'Caribbean Mangrove Forests',
+      status: 'pending',
+      severity: 'high',
+      reporter: 'Guardian User',
+      time: new Date(Date.now() - 259200000).toLocaleDateString(),
+      aiConfidence: 78
+    }
+  ];
 
   const alerts = [
     {
@@ -179,17 +220,20 @@ const Dashboard = () => {
 
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'verified': return 'success';
       case 'pending': return 'warning';
       case 'under_review': return 'secondary';
       case 'rejected': return 'destructive';
+      case 'resolved': return 'success';
+      case 'investigating': return 'secondary';
       default: return 'secondary';
     }
   };
 
   const getSeverityColor = (severity: string) => {
-    switch (severity) {
+    switch (severity?.toLowerCase()) {
+      case 'critical': return 'destructive';
       case 'high': return 'destructive';
       case 'medium': return 'warning';
       case 'low': return 'success';
@@ -276,8 +320,10 @@ const Dashboard = () => {
                       <div className="flex-shrink-0">
                         {report.status === 'verified' ? (
                           <CheckCircle className="h-5 w-5 text-success" />
-                        ) : report.severity === 'high' ? (
+                        ) : report.severity?.toLowerCase() === 'critical' || report.severity?.toLowerCase() === 'high' ? (
                           <AlertTriangle className="h-5 w-5 text-destructive" />
+                        ) : report.severity?.toLowerCase() === 'medium' ? (
+                          <AlertTriangle className="h-5 w-5 text-warning" />
                         ) : (
                           <Clock className="h-5 w-5 text-warning" />
                         )}
@@ -302,11 +348,11 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <Badge variant={getStatusColor(report.status) as any} className="text-xs">
-                          {report.status.replace('_', ' ')}
-                        </Badge>
                         <Badge variant={getSeverityColor(report.severity) as any} className="text-xs">
-                          {report.severity}
+                          {report.severity?.charAt(0).toUpperCase() + report.severity?.slice(1).toLowerCase() || 'Unknown'}
+                        </Badge>
+                        <Badge variant={getStatusColor(report.status) as any} className="text-xs">
+                          {report.status?.replace('_', ' ')?.charAt(0).toUpperCase() + report.status?.replace('_', ' ')?.slice(1).toLowerCase() || 'Unknown'}
                         </Badge>
                       </div>
                     </div>
