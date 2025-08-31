@@ -92,13 +92,7 @@ const Dashboard = () => {
     }
   ];
 
-  const activeGuardians = [
-    { name: 'Dr. Sarah Chen', reports: 12, location: 'Singapore', status: 'online' },
-    { name: 'Ahmed Hassan', reports: 8, location: 'Egypt', status: 'online' },
-    { name: 'Maria Santos', reports: 15, location: 'Philippines', status: 'away' },
-    { name: 'David Kim', reports: 6, location: 'South Korea', status: 'online' },
-    { name: 'Ana Rodriguez', reports: 9, location: 'Colombia', status: 'offline' }
-  ];
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -128,14 +122,7 @@ const Dashboard = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'online': return '🟢';
-      case 'away': return '🟡';
-      case 'offline': return '⚫';
-      default: return '⚫';
-    }
-  };
+
 
   return (
     <>
@@ -146,7 +133,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 mb-4">
             <BarChart3 className="h-8 w-8 text-accent" />
-            <h1 className="text-3xl md:text-4xl font-bold">Authority Dashboard</h1>
+            <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
           </div>
           <p className="text-lg text-white/90 max-w-2xl">
             Real-time monitoring and management of mangrove conservation efforts. 
@@ -306,35 +293,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Active Guardians */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Active Guardians
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {activeGuardians.map((guardian, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-ocean rounded-full flex items-center justify-center text-white text-xs font-bold">
-                        {guardian.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm truncate">{guardian.name}</span>
-                          <span className="text-xs">{getStatusIcon(guardian.status)}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {guardian.location} • {guardian.reports} reports
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+
 
 
           </div>
