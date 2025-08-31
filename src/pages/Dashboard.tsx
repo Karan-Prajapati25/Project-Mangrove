@@ -222,11 +222,13 @@ const Dashboard = () => {
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'verified': return 'default';
-      case 'pending': return 'outline';
+      case 'pending': return 'destructive';
       case 'under_review': return 'secondary';
       case 'rejected': return 'destructive';
       case 'resolved': return 'default';
       case 'investigating': return 'secondary';
+      case 'completed': return 'default';
+      case 'in_progress': return 'secondary';
       default: return 'outline';
     }
   };
