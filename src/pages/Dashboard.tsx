@@ -221,13 +221,13 @@ const Dashboard = () => {
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case 'verified': return 'success';
-      case 'pending': return 'warning';
+      case 'verified': return 'default';
+      case 'pending': return 'outline';
       case 'under_review': return 'secondary';
       case 'rejected': return 'destructive';
-      case 'resolved': return 'success';
+      case 'resolved': return 'default';
       case 'investigating': return 'secondary';
-      default: return 'secondary';
+      default: return 'outline';
     }
   };
 
@@ -235,20 +235,13 @@ const Dashboard = () => {
     switch (severity?.toLowerCase()) {
       case 'critical': return 'destructive';
       case 'high': return 'destructive';
-      case 'medium': return 'warning';
-      case 'low': return 'success';
-      default: return 'secondary';
+      case 'medium': return 'default';
+      case 'low': return 'secondary';
+      default: return 'outline';
     }
   };
 
-  const getAlertColor = (type: string) => {
-    switch (type) {
-      case 'critical': return 'destructive';
-      case 'warning': return 'warning';
-      case 'success': return 'success';
-      default: return 'secondary';
-    }
-  };
+
 
 
 
@@ -348,9 +341,6 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div className="flex flex-col gap-1">
-                        <Badge variant={getSeverityColor(report.severity) as any} className="text-xs">
-                          {report.severity?.charAt(0).toUpperCase() + report.severity?.slice(1).toLowerCase() || 'Unknown'}
-                        </Badge>
                         <Badge variant={getStatusColor(report.status) as any} className="text-xs">
                           {report.status?.replace('_', ' ')?.charAt(0).toUpperCase() + report.status?.replace('_', ' ')?.slice(1).toLowerCase() || 'Unknown'}
                         </Badge>
@@ -373,7 +363,12 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   {alerts.map((alert, index) => (
                     <div key={index} className="flex items-start gap-3">
-                      <div className={`w-3 h-3 rounded-full bg-${getAlertColor(alert.type)} mt-2 flex-shrink-0`} />
+                      <div className={`w-3 h-3 rounded-full ${
+                        alert.type === 'critical' ? 'bg-destructive' :
+                        alert.type === 'warning' ? 'bg-yellow-500' :
+                        alert.type === 'success' ? 'bg-green-500' :
+                        'bg-muted'
+                      } mt-2 flex-shrink-0`} />
                       <div className="flex-1">
                         <p className="font-medium text-sm">{alert.message}</p>
                         <p className="text-xs text-muted-foreground mb-1">{alert.location}</p>
@@ -557,19 +552,8 @@ const Dashboard = () => {
                        </div>
                      </div>
                      <div className="flex flex-col gap-2">
-                       <Badge variant={
-                         report.severity === 'high' ? 'destructive' :
-                         report.severity === 'medium' ? 'default' :
-                         report.severity === 'low' ? 'secondary' : 'outline'
-                       }>
-                         {report.severity}
-                       </Badge>
-                       <Badge variant={
-                         report.status === 'pending' ? 'outline' :
-                         report.status === 'verified' ? 'default' :
-                         report.status === 'rejected' ? 'destructive' : 'secondary'
-                       }>
-                         {report.status}
+                       <Badge variant={getStatusColor(report.status) as any} className="text-xs">
+                         {report.status?.replace('_', ' ')?.charAt(0).toUpperCase() + report.status?.replace('_', ' ')?.slice(1).toLowerCase() || 'Unknown'}
                        </Badge>
                      </div>
                    </div>
