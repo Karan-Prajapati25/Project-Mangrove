@@ -146,7 +146,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-3 mb-4">
             <BarChart3 className="h-8 w-8 text-accent" />
-            <h1 className="text-3xl md:text-4xl font-bold">Authority Dashboard</h1>
+            <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
           </div>
           <p className="text-lg text-white/90 max-w-2xl">
             Real-time monitoring and management of mangrove conservation efforts. 
