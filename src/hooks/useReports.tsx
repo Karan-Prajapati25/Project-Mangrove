@@ -35,6 +35,25 @@ export const useReports = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Fetch all reports (admin)
+  const fetchAllReports = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      toast({
+        title: 'Error fetching all reports',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      setReports(data || []);
+    }
+    setLoading(false);
+  };
+
   const fetchReports = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -116,13 +135,14 @@ export const useReports = () => {
 
   useEffect(() => {
     fetchReports();
-  }, []);
+  }, [fetchReports]);
 
   return {
     reports,
     loading,
     submitReport,
     getUserReports,
-    refetchReports: fetchReports
+  refetchReports: fetchReports,
+  fetchAllReports
   };
 };
